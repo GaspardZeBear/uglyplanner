@@ -1,0 +1,476 @@
+
+<!doctype html>
+<html lang="fr">
+<head>
+<title>HTML Planning</title>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="Planning.css">
+<link rel="stylesheet" href="tootik.min.css">
+<script type="text/javascript" src="Planning.js"></script>
+
+<script>
+ window.onload= createPage 
+ 
+function generateTh(row, txt, clazz) {
+    let th = document.createElement("th");
+    let sp=txt.split("<br>");
+    for (s of sp) {
+      let text = document.createTextNode(s);
+      th.appendChild(text);
+      br=document.createElement("br");
+      th.appendChild(br);
+      //console.log(clazz);
+      th.classList.add(clazz);
+    }
+    row.appendChild(th);
+}
+
+function generateHtmlTableHead(table,items) {
+  let thead = table.createTHead();
+  let row = thead.insertRow();
+  var loop = new Date(start);
+  generateTh(row,"Item<br>Date<br><br>","col_1");
+  generateTh(row,"","dummy");
+  for (i in items) {
+    for (j in items[i]) {
+      txt=j;
+      //console.log(txt);
+      if ( txt.endsWith("M") ) {
+        txt=txt.substr(0,10);
+      } else {
+        txt="........";
+      }
+      generateTh(row,txt.replace("-","<br>").replace("-","/"),dayProps[j]);
+      //generateTh(row,txt.replace("-","<br>").replace("-","/").replace("M","<br>M").replace("A","<br>"),dayProps[j]);
+    }
+    break;
+  }
+}
+
+function getHrefFromEvent(event) {
+  return(event["line"]+"_"+event["date"]);
+}
+
+function generateTd(row, event, col, clazz) {
+    let cell = row.insertCell();
+    //console.log(event);
+    if ( (Object.keys(event).length == 0)) {
+        cell.classList.add(clazz);
+      return
+    }
+
+    if ( (Object.keys(event).length > 0) && ("kind" in event) ) {
+      let text = document.createTextNode(event["kind"]);
+      
+      let content=document.createElement('a'); 
+      if ( col > 2 ) {
+        content.setAttribute("data-tootik",event["note"])
+        content.setAttribute("data-tootik-conf","invert multiline square shadow")
+        cell.classList.add(event["kind"]);
+      } 
+      content.append(text);
+      //content.title("link");
+      content.href="#"+getHrefFromEvent(event);
+      cell.appendChild(content);
+
+      //cell.setAttribute("href", "http://xxxxx");
+    }
+    cell.classList.add(clazz);
+    //cell.classList.toggle("xxxxx");
+    //cell.onrightclick = function() {alert(event);};
+}
+
+//-------------------------------------------------------------------------------------------------------
+function generateHtmlTable(table,items) {
+  //console.log(items);
+  names=Object.keys(items)
+  names.sort()
+  for (i of names) {
+    //console.log(i);
+    //console.log(table)
+    let row = table.insertRow();
+    // fill in 2 first columns
+    generateTd(row,{kind:i},1,"col_1");
+    // dummy cause first cols is absolute
+    generateTd(row,{kind:"XXX"},2,"dummy");
+
+    if ( eventsCounter[i] == 0 ) {
+      console.log(eventsCounter[i])
+      for (j in daysList) {
+        generateTd(row,{kind:"H"},3,'ruler');
+      } 
+    } else {
+      for (j in items[i]) {
+        generateTd(row,items[i][j],3,dayProps[j]);
+      }
+    }
+  }
+}
+
+//-------------------------------------------------------------------------------------------------------
+function updateVirtualTableCell(line,when,event) {
+    // some events at same date
+    if (   Object.keys(virtualTable[line][when]).length > 0 ) {
+      //console.log("Collision" + line + " when=" + when);
+      let processing = "[" + virtualTable[line][when]["kind"] + "/" + virtualTable[line][when]["note"]  + "]";
+      //console.log(processing)
+      processing += "\n&& " + "[" + event["kind"] + "/" + event["note"] + "]";
+      //console.log(processing)
+      let nWhen=JSON.parse(JSON.stringify(virtualTable[line][when]));
+      nWhen["kind"]="XXX";
+      nWhen["note"] += processing
+      nWhen["processing"]=processing;
+      virtualTable[line][when]=nWhen;
+      //console.log(virtualTable[line][when]);
+      // Create a new line
+      if ( ! (line in namesCounter) ) {
+        namesCounter[line]=0
+      }
+      namesCounter[line] += 1
+      //console.log(namesCounter);
+      let newLine=line+"_"+namesCounter[line].toString().padStart(2, '0') + '+'
+      //console.log(newLine);
+      createVirtualTableLine(newLine)
+
+      whensVirtualTable(newLine,when,event);
+    } else {
+      virtualTable[line][when]=event;
+    }
+    //console.log("End updateVirtualTableCell");
+}
+
+//-------------------------------------------------------------------------------------------------------
+// Suffix A or M
+function updateVirtualTableCellWithSuffix(line,when,event,suffix) {
+
+    let nEvent=JSON.parse(JSON.stringify(event));
+    let nWhen=when+suffix;
+    nEvent["date"]=nWhen;
+    nEvent["when"]=nWhen;
+    updateVirtualTableCell(line,nWhen,nEvent);
+
+}
+
+//-------------------------------------------------------------------------------------------------------
+function simpleWhenVirtualTable(line,when,event) {
+  let nEvent=JSON.parse(JSON.stringify(event));
+  nEvent["line"]=line;
+  if (when.length == 10) {
+    updateVirtualTableCellWithSuffix(line,when,nEvent,"M");
+    updateVirtualTableCellWithSuffix(line,when,nEvent,"A");
+  } else {
+    //virtualTable[line][when]=event;
+    nEvent["date"]=when;
+    updateVirtualTableCell(line,when,nEvent);
+  }
+ }
+
+//-------------------------------------------------------------------------------------------------------
+function multipleWhensVirtualTable(line,when,event) {
+  //console.log("multipleWhensVirtualTable")
+  //console.log(when);
+  let whens=when.split("@");
+  let start=new Date(whens[0].substring(0,10));
+  let end=new Date(whens[whens.length -1 ].substring(0,10));
+  let loop = new Date(start);
+  let dates=[];
+  while(loop <= end){
+    //let day=loop.toISOString().split('T')[0];
+    let day=date2day(loop);
+    //console.log(day);
+    dates.push(day+"M");
+    dates.push(day+"A");
+    let newDate = loop.setDate(loop.getDate() + 1);
+    loop = new Date(newDate);
+  }
+  //console.log("dates before")
+  //console.log(dates)
+  if ( whens[0].length == 10 ) {
+    whens[0] += "M"
+  }
+  if ( whens[1].length == 10 ) {
+    whens[1] += "A"
+  }
+
+  if (dates[0].localeCompare(whens[0]) != 0 ) {
+    dates.shift();
+  } 
+  if ( dates[dates.length-1].localeCompare(whens[1]) != 0 ) {
+    dates.pop();
+  }
+  //console.log("dates after")
+  //console.log(dates)
+  for (d of dates) {
+    //console.log(d);
+    let nEvent=JSON.parse(JSON.stringify(event));;
+    //nEvent["line"]=line;
+    nEvent["date"]=d;
+    updateVirtualTableCell(line,d,nEvent);
+    //virtualTable[line][d]=event;
+  }
+}
+
+//-------------------------------------------------------------------------------------------------------
+function whensVirtualTable(line,when,event) {
+  if ( when.includes("@") ) {
+    multipleWhensVirtualTable(line,when,event);
+  } else {
+    simpleWhenVirtualTable(line,when,event);
+  }
+}
+
+//-------------------------------------------------------------------------------------------------------
+function fillInVirtualTable(myPlanning) {
+  console.log("---- Begin fillInVirtualTable");
+  for (let item of myPlanning) {
+    //console.log(item);
+    let i=item["name"];
+    eventsCounter[i]=0
+    for (let event of item["events"]) {
+       //console.log(event);
+       eventsCounter[i] += 1
+       j=event["when"];
+       k=event;
+       k["date"]="";
+       //console.log(myPlanning[item]["events"][event]["when"]);
+       whensVirtualTable(i,j,k);
+       if (  "links" in event ) {
+         for ( link of event["links"] ) {
+           k["note"] += ": [link] " + i
+           whensVirtualTable(link,j,k);
+         }
+       }
+    }
+  }
+  console.log("---- End fillInVirtualTable");
+  //console.table(virtualTable)
+}
+
+
+//-------------------------------------------------------------------------------------------------------
+function date2day(d) {
+  let l=d.toLocaleString("fr-FR").substring(0,10);
+  let t=l.split("/");
+  //console.log(d);
+  //console.log(l);
+  return(t[2]+"-"+t[1]+"-"+t[0]);
+}
+
+//-------------------------------------------------------------------------------------------------------
+function JoursFeries (an){
+	var JourAn = new Date(an, "00", "01")
+	var FeteTravail = new Date(an, "04", "01")
+	var Victoire1945 = new Date(an, "04", "08")
+    var FeteNationale = new Date("2022","06", "14","01","00","00")
+    var FeteNationale = new Date("2022-07-14T00:00")
+	var Assomption = new Date(an, "07", "15")
+	var Toussaint = new Date(an, "10", "01")
+	var Armistice = new Date(an, "10", "11")
+	var Noel = new Date(an, "11", "25")
+	var G = an%19
+	var C = Math.floor(an/100)
+	var H = (C - Math.floor(C/4) - Math.floor((8*C+13)/25) + 19*G + 15)%30
+	var I = H - Math.floor(H/28)*(1 - Math.floor(H/28)*Math.floor(29/(H + 1))*Math.floor((21 - G)/11))
+	var J = (an*1 + Math.floor(an/4) + I + 2 - C + Math.floor(C/4))%7
+	var L = I - J
+	var MoisPaques = 3 + Math.floor((L + 40)/44)
+	var JourPaques = L + 28 - 31*Math.floor(MoisPaques/4)
+	var Paques = new Date(an, MoisPaques-1, JourPaques)
+	var LundiPaques = new Date(an, MoisPaques-1, JourPaques+1)
+	var Ascension = new Date(an, MoisPaques-1, JourPaques+39)
+	var Pentecote = new Date(an, MoisPaques-1, JourPaques+49)
+	var LundiPentecote = new Date(an, MoisPaques-1, JourPaques+50)
+	return new Array(JourAn, Paques, LundiPaques, FeteTravail, Victoire1945, Ascension, Pentecote, LundiPentecote, FeteNationale, Assomption, Toussaint, Armistice, Noel)
+}
+
+//-------------------------------------------------------------------------------------------------------
+function createVirtualTableLine(name) {
+  virtualTable[name]={};
+  let loop = new Date(start);
+  while(loop <= end){
+    //console.log(loop);
+    //let day=loop.toISOString().split('T')[0];
+    let day=date2day(loop);
+    virtualTable[name][day + "M"]={};
+    virtualTable[name][day + "A"]={};
+    dayOfWeek=new Date(day.substring(0,10)).getDay();
+    //console.log(day);
+    //console.log(dayOfWeek);
+    dayProps[day + "M"]="d" + dayOfWeek.toString();
+    dayProps[day + "A"]="d" + dayOfWeek.toString();
+    //console.log(dayProps[day + "A"])
+    if ((day in publicHolidays) && (dayOfWeek != 0 ) && (dayOfWeek != 6 )) {
+      dayProps[day + "M"]="feast";
+      dayProps[day + "A"]="feast";
+    }
+    let newDate = loop.setDate(loop.getDate() + 1);
+    loop = new Date(newDate);
+  }
+}
+
+
+//-------------------------------------------------------------------------------------------------------
+function initVirtualTable(myPlanning) {
+// init the virtual table
+console.log("--- begin initVirtualTable")
+for (let item of myPlanning) {
+  createVirtualTableLine(item["name"]) 
+}
+console.log("--- end initVirtualTable")
+}
+
+//-------------------------------------------------------------------------------------------------------
+function fillDatasTable(datas,items) {
+    for (i in items) {
+      for (j in items[i]) { 
+        k=items[i][j];
+        if ( Object.keys(k).length > 0 && !(k["note"]=== undefined) ) {
+          let row = datas.insertRow();
+          row.insertCell().appendChild(document.createTextNode(i));
+          row.insertCell().appendChild(document.createTextNode(j));
+          let cell=row.insertCell();
+          cell.appendChild(document.createTextNode(k["kind"]));
+          cell.setAttribute("id",getHrefFromEvent(k));
+          cell.classList.add(k["kind"]);
+          if ( "note" in k && k["note"].length > 0 ) {      
+            row.insertCell().appendChild(document.createTextNode(k["note"]));
+          } else {
+            row.insertCell().appendChild(document.createTextNode(""));
+          }
+          row.insertCell().appendChild(document.createTextNode(k["processing"]));
+        }
+     }
+  }
+}
+
+//-------------------------------------------------------------------------------------------------------
+function initDaysList(start,end) {
+    console.log(start)
+  let loop = new Date(start);
+  while(loop <= end){
+    //console.log(loop);
+    //let day=loop.toISOString().split('T')[0];
+    let day=date2day(loop);
+    daysList.push(day + "M")
+    daysList.push(day + "A")
+    let newDate = loop.setDate(loop.getDate() + 1);
+    loop = new Date(newDate);
+  }
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------
+
+
+//let names = Object.keys(myPlanning[1]);
+//alert(data);
+var virtualTable={};
+var eventsCounter={};
+var namesCounter={}
+//console.log(">>> virtualTable :empty !!!");
+//console.log(virtualTable);
+var publicHolidays={};
+for (let d of JoursFeries("2022")) {
+    publicHolidays[date2day(d)]=true;
+    //console.log(d.toISOString().split('T')[0]);
+}
+var dayProps={};
+var daysList=[]
+
+var start=new Date("2021-12-31");
+var end=new Date("2022-12-15");
+
+//---------------------------------------------------------------------------------------------------------------------------------------------
+function createPage() {
+
+  //console.log(virtualTable);
+  eventsCounter={};
+  virtualTable={};
+  namesCounter={};
+  //daysList=[]
+  //start = new Date(document.getElementById("start").value);
+  //console.log("===================================")
+  initDaysList(start,end)
+  //console.log("----------------------")
+  initVirtualTable(myPlanning);
+  //console.log(virtualTable);
+  fillInVirtualTable(myPlanning);
+  var table = document.querySelector("#planning");
+  var tableHeaderRowCount = 1;
+//var table = document.getElementById('WRITE_YOUR_HTML_TABLE_NAME_HERE');
+  var rowCount = table.rows.length;
+  for (var i = tableHeaderRowCount; i < rowCount; i++) {
+    table.deleteRow(tableHeaderRowCount);
+  }
+  generateHtmlTable(table,virtualTable); // generate the table first
+  generateHtmlTableHead(table, virtualTable); // then the head
+  var datas = document.querySelector("#datas");
+  fillDatasTable(datas,virtualTable) ;
+//document.write(myPlanning);
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------
+function filterItems() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("planning");
+  tr = table.getElementsByTagName("tr");
+  if ( filter.endsWith("!") ) {
+      return
+  }
+  if ( filter.endsWith("\\") ) {
+      return
+  }
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      //if (txtValue.toUpperCase().indexOf(filter) > -1) {
+      let re = new RegExp(filter);
+      if (filter.startsWith("!")) {
+        re = new RegExp("^((?!" + filter.substr(1) + ").)*$");
+      } 
+      //^((?!\+).)*$
+      if ( re.test(txtValue.toUpperCase()) ) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
+//---------------------------------------------------------------------------------------------------------------------------------------------
+document.addEventListener("keyup", function(event) {
+    if (event.keyCode === 13) {
+        alert('Enter is pressed!');
+    }
+});
+</script>
+<body>
+    <h2>Commands</h2>
+    <input type="text" id="myInput" onkeyup="filterItems()" placeholder="Search for items ..">
+    <form>
+    <input type="text" id="start" placeholder="start">
+    <input type="text" id="xend" placeholder="end">
+    <input type="button" onclick="createPage()">
+     </form>
+    <p>Hint : !xxx to negate, !\+ to compact</p>
+
+        
+    <h2>Planning</h2>
+    <div>
+    <table id="planning">
+
+    </table>
+    </div>
+
+    <h2>Details</h2>
+    <table id="datas">
+
+    </table>
+</body>
+</html>

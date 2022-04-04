@@ -1,0 +1,122 @@
+<style>
+
+table {
+  table-layout: fixed;
+
+  xborder: 1px solid black;
+}
+
+th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  border-spacing: 0,0;
+  xwidth: 20px;
+  xheight: 10px;
+}
+
+.col_1 {
+    color: blue;
+position:absolute;
+opacity: 1 ;
+z-index: 9999;
+width: 140px;
+background-color: lightyellow;
+xheight: 10px;
+}
+
+.ruler {
+    background-color: white;
+    color:white;
+    border: 0px;
+    xheight: 10px;
+}
+.weekend {
+  color: yellow;
+  background-color: grey;
+  xwidth: 10px;
+}
+
+.feast {
+    color: blackk;
+    background-color: pink;
+    width: 10px;
+  }
+
+.d1 {
+  color: black;
+  background-color:rgb(247, 241, 233);
+  width: 10px;
+}
+
+.d2 {
+  color: black;
+  background-color:white;
+  width: 10px;
+}
+
+.d3 {
+  color: black;
+  background-color:rgb(247, 241, 233);
+  width: 10px;
+}
+
+.d4 {
+  color: black;
+  background-color:white;
+  width: 10px;
+}
+
+.d5 {
+  color: black;
+  background-color:rgb(247, 241, 233);
+  width: 10px;
+}
+
+.d6 {
+  color: lightgoldenrodyellow;
+  background-color:darkgrey;
+  width: 10px;
+}
+
+.d0 {
+  color: yellow;
+  background-color:grey;
+  width: 10px;
+}
+
+.HOL {
+  background-color: yellow;
+}
+
+.H a {
+    background-color: white;
+    color: white !important;
+  }
+  
+
+.TEA {
+  background-color: blueviolet;
+}
+.PUP {
+  background-color: pink;
+}
+
+.EVT {
+  background-color: lightseagreen;
+}
+
+.XXX {
+    background-color: red;
+
+  }
+
+div {
+  width: 100%;
+  overflow-x: scroll;
+  overflow-y: visible;
+  padding: 0;
+}
+
+
+
+</style>
