@@ -93,7 +93,9 @@ xheight: 10px;
     color: white !important;
   }
   
-
+.BYE {
+  background-color: grey;
+}
 .TEA {
   background-color: blueviolet;
 }

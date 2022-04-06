@@ -111,8 +111,13 @@ function generateHtmlTable(table,items) {
 //-------------------------------------------------------------------------------------------------------
 function updateVirtualTableCell(line,when,event) {
     // some events at same date
+    console.log(line)
+    console.log(when)
     if (   Object.keys(virtualTable[line][when]).length > 0 ) {
-      //console.log("Collision" + line + " when=" + when);
+      console.log("----------------- Collision" + line)
+      console.log(when)
+      console.log(event)
+      
       let processing = "[" + virtualTable[line][when]["kind"] + "/" + virtualTable[line][when]["note"]  + "]";
       //console.log(processing)
       processing += "\n&& " + "[" + event["kind"] + "/" + event["note"] + "]";
@@ -154,6 +159,12 @@ function updateVirtualTableCellWithSuffix(line,when,event,suffix) {
 
 //-------------------------------------------------------------------------------------------------------
 function simpleWhenVirtualTable(line,when,event) {
+  if ( when < start ) {
+    return
+  }
+  if ( when > end ) {
+    return
+  }
   let nEvent=JSON.parse(JSON.stringify(event));
   nEvent["line"]=line;
   if (when.length == 10) {
@@ -168,24 +179,52 @@ function simpleWhenVirtualTable(line,when,event) {
 
 //-------------------------------------------------------------------------------------------------------
 function multipleWhensVirtualTable(line,when,event) {
-  //console.log("multipleWhensVirtualTable")
-  //console.log(when);
+  console.log("multipleWhensVirtualTable")
+  console.log(when);
   let whens=when.split("@");
-  let start=new Date(whens[0].substring(0,10));
-  let end=new Date(whens[whens.length -1 ].substring(0,10));
-  let loop = new Date(start);
+  //let start=new Date(whens[0].substring(0,10));
+  //let end=new Date(whens[whens.length -1 ].substring(0,10));
+  console.log(whens);
+console.log(whens[0]);
+
+  let nstart=new Date(whens[0].substring(0,10));
+console.log(nstart)
+  if ( nstart < new Date(start) ) {
+    nstart = new Date(start)
+  }
+  //let nend=new Date(whens[whens.length -1 ].substring(0,10));
+console.log(whens[1]);
+  let nend=new Date(whens[1].substring(0,10));
+console.log(nend)
+
+  if ( nend > new Date(end) ) {
+    nend = new Date(end)
+  }
+  if ( nend < new Date(start) ) {
+    return
+  }
+  if ( nstart > new Date(end) ) {
+    return
+  }
+  if ( nstart > new Date(nend)) {
+    return
+  }
+  let loop = new Date(nstart);
+  
   let dates=[];
-  while(loop <= end){
-    //let day=loop.toISOString().split('T')[0];
+
+  while(loop <= nend){
+    console.log("Looooooop" )
+    console.log(loop)
+    console.log(nend)
     let day=date2day(loop);
-    //console.log(day);
+    console.log(day);
     dates.push(day+"M");
     dates.push(day+"A");
     let newDate = loop.setDate(loop.getDate() + 1);
     loop = new Date(newDate);
   }
-  //console.log("dates before")
-  //console.log(dates)
+ //throw new Error('This is not an error. This is just to abort javascript');
   if ( whens[0].length == 10 ) {
     whens[0] += "M"
   }
@@ -199,16 +238,17 @@ function multipleWhensVirtualTable(line,when,event) {
   if ( dates[dates.length-1].localeCompare(whens[1]) != 0 ) {
     dates.pop();
   }
-  //console.log("dates after")
-  //console.log(dates)
+
   for (d of dates) {
-    //console.log(d);
+    console.log(d);
+    
     let nEvent=JSON.parse(JSON.stringify(event));;
     //nEvent["line"]=line;
     nEvent["date"]=d;
+    console.log(event);
+    console.log(nEvent);
     updateVirtualTableCell(line,d,nEvent);
-    //virtualTable[line][d]=event;
-  }
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -224,7 +264,7 @@ function whensVirtualTable(line,when,event) {
 function fillInVirtualTable(myPlanning) {
   console.log("---- Begin fillInVirtualTable");
   for (let item of myPlanning) {
-    //console.log(item);
+    console.log(item);
     let i=item["name"];
     eventsCounter[i]=0
     for (let event of item["events"]) {
@@ -377,8 +417,8 @@ for (let d of JoursFeries("2022")) {
 var dayProps={};
 var daysList=[]
 
-var start=new Date("2021-12-31");
-var end=new Date("2022-12-15");
+var start=new Date("2022-04-01");
+var end=new Date("2022-07-01");
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 function createPage() {
@@ -395,6 +435,7 @@ function createPage() {
   initVirtualTable(myPlanning);
   //console.log(virtualTable);
   fillInVirtualTable(myPlanning);
+  console.table(virtualTable)
   var table = document.querySelector("#planning");
   var tableHeaderRowCount = 1;
 //var table = document.getElementById('WRITE_YOUR_HTML_TABLE_NAME_HERE');
