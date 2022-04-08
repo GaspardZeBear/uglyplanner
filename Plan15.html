@@ -10,7 +10,7 @@
 <script type="text/javascript" src="Planning.js"></script>
 
 <script>
- window.onload= createPage 
+window.onload= createPage 
  
 function generateTh(row, txt, clazz) {
     let th = document.createElement("th");
@@ -20,20 +20,19 @@ function generateTh(row, txt, clazz) {
       th.appendChild(text);
       br=document.createElement("br");
       th.appendChild(br);
-      //console.log(clazz);
       th.classList.add(clazz);
     }
     row.appendChild(th);
 }
 
-function generateHtmlTableHead(table,items) {
+function generateHtmlTableHead(table) {
   let thead = table.createTHead();
   let row = thead.insertRow();
   var loop = new Date(CTX.getStart());
   generateTh(row,"Item<br>Date<br><br>","col_1");
   generateTh(row,"","dummy");
-  for (i in items) {
-    for (j in items[i]) {
+  for (i in CTX.getVirtualTable()) {
+    for (j in CTX.getVirtualTable()[i]) {
       txt=j;
       //console.log(txt);
       if ( txt.endsWith("M") ) {
@@ -41,8 +40,8 @@ function generateHtmlTableHead(table,items) {
       } else {
         txt="........";
       }
-      generateTh(row,txt.replace("-","<br>").replace("-","/"),dayProps[j]);
-      //generateTh(row,txt.replace("-","<br>").replace("-","/").replace("M","<br>M").replace("A","<br>"),dayProps[j]);
+      generateTh(row,txt.replace("-","<br>").replace("-","/"),CTX.getDayProps()[j]);
+      //generateTh(row,txt.replace("-","<br>").replace("-","/").replace("M","<br>M").replace("A","<br>"),CTX.getDayProps()[j]);
     }
     break;
   }
@@ -62,7 +61,6 @@ function generateTd(row, event, col, clazz) {
 
     if ( (Object.keys(event).length > 0) && ("kind" in event) ) {
       let text = document.createTextNode(event["kind"]);
-      
       let content=document.createElement('a'); 
       if ( col > 2 ) {
         content.setAttribute("data-tootik",event["note"])
@@ -70,39 +68,31 @@ function generateTd(row, event, col, clazz) {
         cell.classList.add(event["kind"]);
       } 
       content.append(text);
-      //content.title("link");
       content.href="#"+getHrefFromEvent(event);
       cell.appendChild(content);
-
-      //cell.setAttribute("href", "http://xxxxx");
     }
     cell.classList.add(clazz);
-    //cell.classList.toggle("xxxxx");
-    //cell.onrightclick = function() {alert(event);};
 }
 
 //-------------------------------------------------------------------------------------------------------
-function generateHtmlTable(table,items) {
+function generateHtmlTable(table) {
   //console.log(items);
-  names=Object.keys(items)
+  names=Object.keys(CTX.getVirtualTable())
   names.sort()
-  for (i of names) {
-    //console.log(i);
-    //console.log(table)
+  for (i of names ) {
     let row = table.insertRow();
     // fill in 2 first columns
     generateTd(row,{kind:i},1,"col_1");
     // dummy cause first cols is absolute
     generateTd(row,{kind:"XXX"},2,"dummy");
 
-    if ( eventsCounter[i] == 0 ) {
-      console.log(eventsCounter[i])
-      for (j in daysList) {
+    if ( CTX.getEventsCounter()[i] == 0 ) {
+      for (j in CTX.getDaysList()) {
         generateTd(row,{kind:"H"},3,'ruler');
       } 
     } else {
-      for (j in items[i]) {
-        generateTd(row,items[i][j],3,dayProps[j]);
+      for (j in CTX.getVirtualTable()[i]) {
+        generateTd(row,CTX.getVirtualTable()[i][j],3,CTX.getDayProps()[j]);
       }
     }
   }
@@ -111,56 +101,35 @@ function generateHtmlTable(table,items) {
 //-------------------------------------------------------------------------------------------------------
 function updateVirtualTableCell(line,when,event) {
     // some events at same date
-    //console.log(line)
-    //console.log(when)
-    //console.log(event)
-    if (   Object.keys(virtualTable[line][when]).length > 0 ) {
-      //console.log("----------------- Collision" + line)
-      //console.log(when)
-      //console.log(event)
-      
-      let processing = "[" + virtualTable[line][when]["kind"] + "/" + virtualTable[line][when]["note"]  + "]";
-      //console.log(processing)
+    if (   Object.keys(CTX.getVirtualTable()[line][when]).length > 0 ) {
+      let processing = "[" + CTX.getVirtualTable()[line][when]["kind"] + "/" + CTX.getVirtualTable()[line][when]["note"]  + "]";
       processing += "\n&& " + "[" + event["kind"] + "/" + event["note"] + "]";
-      //console.log(processing)
-      let nWhen=JSON.parse(JSON.stringify(virtualTable[line][when]));
+      let nWhen=JSON.parse(JSON.stringify(CTX.getVirtualTable()[line][when]));
       nWhen["kind"]="XXX";
       nWhen["note"] += processing
       nWhen["processing"]=processing;
-      virtualTable[line][when]=nWhen;
-      //console.log(virtualTable[line][when]);
+      CTX.getVirtualTable()[line][when]=nWhen;
       // Create a new line
-      if ( ! (line in namesCounter) ) {
-        namesCounter[line]=0
+      if ( ! (line in CTX.getNamesCounter()) ) {
+        CTX.getNamesCounter[line]=0
       }
-      namesCounter[line] += 1
-      //console.log(namesCounter);
-      let newLine=line+"_"+namesCounter[line].toString().padStart(2, '0') + '+'
-      //console.log(newLine);
+      CTX.getNamesCounter[line] += 1
+      let newLine=line+"_"+ CTX.getNamesCounter[line].toString().padStart(2, '0') + '+'
       createVirtualTableLine(newLine)
-
       whensVirtualTable(newLine,when,event);
     } else {
-      virtualTable[line][when]=event;
+      CTX.getVirtualTable()[line][when]=event;
     }
-    //console.log("End updateVirtualTableCell");
 }
 
 //-------------------------------------------------------------------------------------------------------
 function isWhenInStartEnd(when) {
-//console.log("------------- isWhenIn ...")
-////console.log(CTX.getStart())
-////console.log(CTX.getEnd())
-//console.log(when)
   if ( new Date(when.substring(0,10)) < CTX.getStart() ) {
-    //console.log("False")
     return(false)
   }
   if ( new Date(when.substring(0,10)) > CTX.getEnd() ) {
-    //console.log("False")
     return(false)
   }
-//console.log("True")
   return(true)
 }
 //-------------------------------------------------------------------------------------------------------
@@ -173,11 +142,7 @@ function updateVirtualTableCellWithSuffix(line,when,event,suffix) {
   let nWhen=when+suffix;
   nEvent["date"]=nWhen;
   nEvent["when"]=nWhen;
-  //console.log("--------------")
-  //console.log(when)
-  //console.log(nWhen)
   updateVirtualTableCell(line,nWhen,nEvent);
-
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -199,11 +164,7 @@ function simpleWhenVirtualTable(line,when,event) {
 
 //-------------------------------------------------------------------------------------------------------
 function multipleWhensVirtualTable(line,when,event) {
-  //console.log("-------> multipleWhensVirtualTable")
-  //console.log(when);
   let whens=when.split("@");
-  //let start=new Date(whens[0].substring(0,10));
-  //let end=new Date(whens[whens.length -1 ].substring(0,10));
   let nstart=new Date(whens[0].substring(0,10));
   if ( nstart < new Date(CTX.getStart()) ) {
     nstart = new Date(CTX.getStart())
@@ -252,13 +213,8 @@ function multipleWhensVirtualTable(line,when,event) {
   }
 
   for (d of dates) {
-    //console.log(d);
-    
     let nEvent=JSON.parse(JSON.stringify(event));;
-    //nEvent["line"]=line;
     nEvent["date"]=d;
-    //console.log(event);
-    //console.log(nEvent);
     updateVirtualTableCell(line,d,nEvent);
     }
 }
@@ -278,10 +234,10 @@ function fillInVirtualTable(myPlanning) {
   for (let item of myPlanning) {
     console.log(item);
     let i=item["name"];
-    eventsCounter[i]=0
+    CTX.getEventsCounter()[i]=0
     for (let event of item["events"]) {
-       //console.log(event);
-       eventsCounter[i] += 1
+       console.log(event);
+       CTX.getEventsCounter()[i] += 1
        j=event["when"];
        k=event;
        k["date"]="";
@@ -296,16 +252,12 @@ function fillInVirtualTable(myPlanning) {
     }
   }
   console.log("---- End fillInVirtualTable");
-  //console.table(virtualTable)
 }
-
 
 //-------------------------------------------------------------------------------------------------------
 function date2day(d) {
   let l=d.toLocaleString("fr-FR").substring(0,10);
   let t=l.split("/");
-  //console.log(d);
-  //console.log(l);
   return(t[2]+"-"+t[1]+"-"+t[0]);
 }
 
@@ -314,8 +266,8 @@ function JoursFeries (an){
 	var JourAn = new Date(an, "00", "01")
 	var FeteTravail = new Date(an, "04", "01")
 	var Victoire1945 = new Date(an, "04", "08")
-    var FeteNationale = new Date("2022","06", "14","01","00","00")
-    var FeteNationale = new Date("2022-07-14T00:00")
+  var FeteNationale = new Date("2022","06", "14","01","00","00")
+  var FeteNationale = new Date("2022-07-14T00:00")
 	var Assomption = new Date(an, "07", "15")
 	var Toussaint = new Date(an, "10", "01")
 	var Armistice = new Date(an, "10", "11")
@@ -338,38 +290,31 @@ function JoursFeries (an){
 
 //-------------------------------------------------------------------------------------------------------
 function createVirtualTableLine(name) {
-  virtualTable[name]={};
+  CTX.getVirtualTable()[name]={};
   let today=new Date()
   let loop = new Date(CTX.getStart());
   while(loop <= CTX.getEnd()){
-    //console.log(loop);
-    //let day=loop.toISOString().split('T')[0];
     let day=date2day(loop);
-    virtualTable[name][day + "M"]={};
-    virtualTable[name][day + "A"]={};
+    CTX.getVirtualTable()[name][day + "M"]={};
+    CTX.getVirtualTable()[name][day + "A"]={};
     dayOfWeek=new Date(day.substring(0,10)).getDay();
-    //console.log(day);
-    //console.log(dayOfWeek);
-    dayProps[day + "M"]="d" + dayOfWeek.toString();
-    dayProps[day + "A"]="d" + dayOfWeek.toString();
-    //console.log(dayProps[day + "A"])
-    if ((day in publicHolidays) && (dayOfWeek != 0 ) && (dayOfWeek != 6 )) {
-      dayProps[day + "M"]="feast";
-      dayProps[day + "A"]="feast";
+    CTX.getDayProps()[day + "M"]="d" + dayOfWeek.toString();
+    CTX.getDayProps()[day + "A"]="d" + dayOfWeek.toString();
+    if ((day in CTX.getPublicHolidays() ) && (dayOfWeek != 0 ) && (dayOfWeek != 6 )) {
+      CTX.getDayProps()[day + "M"]="feast";
+      CTX.getDayProps()[day + "A"]="feast";
     }
     if ( date2day(today) == date2day(loop) ) {
-      dayProps[day + "M"]="today";
-      dayProps[day + "A"]="today";
+      CTX.getDayProps()[day + "M"]="today";
+      CTX.getDayProps()[day + "A"]="today";
     }
     let newDate = loop.setDate(loop.getDate() + 1);
     loop = new Date(newDate);
   }
 }
 
-
 //-------------------------------------------------------------------------------------------------------
 function initVirtualTable(myPlanning) {
-// init the virtual table
 console.log("--- begin initVirtualTable")
 for (let item of myPlanning) {
   createVirtualTableLine(item["name"]) 
@@ -378,10 +323,10 @@ console.log("--- end initVirtualTable")
 }
 
 //-------------------------------------------------------------------------------------------------------
-function fillDatasTable(datas,items) {
-    for (i in items) {
-      for (j in items[i]) { 
-        k=items[i][j];
+function fillDatasTable(datas) {
+    for (i in CTX.getVirtualTable()) {
+      for (j in CTX.getVirtualTable()[i]) { 
+        k=CTX.getVirtualTable()[i][j];
         if ( Object.keys(k).length > 0 && !(k["note"]=== undefined) ) {
           let row = datas.insertRow();
           row.insertCell().appendChild(document.createTextNode(i));
@@ -405,94 +350,26 @@ function fillDatasTable(datas,items) {
 function initDaysList() {
    let loop = new Date(CTX.getStart());
   while(loop <= CTX.getEnd()){
-    //console.log(loop);
-    //let day=loop.toISOString().split('T')[0];
     let day=date2day(loop);
-    daysList.push(day + "M")
-    daysList.push(day + "A")
+    CTX.getDaysList().push(day + "M")
+    CTX.getDaysList().push(day + "A")
     let newDate = loop.setDate(loop.getDate() + 1);
     loop = new Date(newDate);
   }
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//let names = Object.keys(myPlanning[1]);
-//alert(data);
-var virtualTable={};
-var eventsCounter={};
-var namesCounter={}
-//console.log(">>> virtualTable :empty !!!");
-//console.log(virtualTable);
-var publicHolidays={};
-for (let d of JoursFeries("2022")) {
-    publicHolidays[date2day(d)]=true;
-    //console.log(d.toISOString().split('T')[0]);
-}
-var dayProps={};
-var daysList=[]
-
-//var start=new Date("2022-04-01");
-//var end=new Date("2022-07-01");
-
-CTX={}
-
 function getToday(offset) {
-  console.log(offset)
-    let msday=86400*1000
+  let msday=86400*1000
   let nd= new Date(new Date().getTime() + offset*msday).toJSON().slice(0, 10)
-  console.log(nd)
   return(nd);
 }
 
-
 //---------------------------------------------------------------------------------------------------------------------------------------------
-function createPage() {
-  let start=document.getElementById("start").value
-  if (start.length == 0) {
-    document.getElementById("start").value=getToday(-2)
-  }
-  let end=document.getElementById("end").value
-  if (end.length == 0) {
-    document.getElementById("end").value=getToday(22)
-  }
-  CTX={
-    _start: document.getElementById("start").value,
-    _end: document.getElementById("end").value,
-    //_start: "2022-04-01",
-    //_end: "2022-04-30",  
-    getStart  : function () { console.log(this._start);return(new Date(this._start)) },
-    setStart  : function (val) { console.log(val);this._start=val },
-    getEnd  : function () { return(new Date(this._end)) }
-  }
-
-  console.log(CTX.getStart())
-  eventsCounter={};
-  virtualTable={};
-  namesCounter={};
-  //daysList=[]
-  //start = new Date(document.getElementById("start").value);
-  //console.log("===================================")
-  initDaysList()
-  //console.log("----------------------")
-  initVirtualTable(myPlanning);
-  //console.log(virtualTable);
-  fillInVirtualTable(myPlanning);
-  //console.table(virtualTable)
-  var table = document.querySelector("#planning");
-table.innerHTML=""
-  var tableHeaderRowCount = 1;
-//var table = document.getElementById('WRITE_YOUR_HTML_TABLE_NAME_HERE');
-  var rowCount = table.rows.length;
-  for (var i = tableHeaderRowCount; i < rowCount; i++) {
-    table.deleteRow(tableHeaderRowCount);
-  }
-  generateHtmlTable(table,virtualTable); // generate the table first
-  generateHtmlTableHead(table, virtualTable); // then the head
-  var datas = document.querySelector("#datas");
-  fillDatasTable(datas,virtualTable) ;
-//document.write(myPlanning);
+function initPublicHolidays(year) {
+for (let d of JoursFeries(year)) {
+    CTX.getPublicHolidays()[date2day(d)]=true;
+}
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -529,14 +406,54 @@ function filterItems() {
     }
   }
 }
+
 //---------------------------------------------------------------------------------------------------------------------------------------------
-document.addEventListener("keyup", function(event) {
-    if (event.keyCode === 13) {
-        alert('Enter is pressed!');
-    }
-});
+function createPage() {
+  let start=document.getElementById("start").value
+  if (start.length == 0) {
+    document.getElementById("start").value=getToday(-2)
+  }
+  let end=document.getElementById("end").value
+  if (end.length == 0) {
+    document.getElementById("end").value=getToday(22)
+  }
+  CTX={
+    _start: document.getElementById("start").value,
+    _end: document.getElementById("end").value,
+    _daysList: [],
+    _dayProps:{},
+    _namesCounter:{},
+    _eventsCounter:{},
+    _publicHolidays:{},
+    _virtualTable :{},  
+    getNamesCounter  : function () { return(this._namesCounter) },
+    getEventsCounter  : function () { return(this._eventsCounter) },
+    getPublicHolidays  : function () { return(this._publicHolidays) },
+    getVirtualTable  : function () { return(this._virtualTable) },
+    getDaysList  : function () { return(this._daysList) },
+    getDayProps  : function () { return(this._dayProps) },
+    getStart  : function () { return(new Date(this._start)) },
+    setStart  : function (val) { this._start=val },
+    getEnd  : function () { return(new Date(this._end)) }
+  }
 
-
+  initDaysList()
+  initPublicHolidays("2022")
+  initPublicHolidays("2023")
+  initVirtualTable(myPlanning);
+  fillInVirtualTable(myPlanning);
+  //console.table(virtualTable)
+  var table = document.querySelector("#planning");
+  table.innerHTML=""
+  generateHtmlTable(table); // generate the table first
+  generateHtmlTableHead(table); // then the head
+  var datas = document.querySelector("#datas");
+  fillDatasTable(datas) ;
+}
+//--------------------------------------------------------------------------------------------------------------------------------------
+//-- Main ----------------
+//--------------------------------------------------------------------------------------------------------------------------------------
+CTX={}
 </script>
 <body>
     <h2>Commands</h2>
