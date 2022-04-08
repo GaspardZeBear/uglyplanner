@@ -29,7 +29,7 @@ function generateTh(row, txt, clazz) {
 function generateHtmlTableHead(table,items) {
   let thead = table.createTHead();
   let row = thead.insertRow();
-  var loop = new Date(start);
+  var loop = new Date(CTX.getStart());
   generateTh(row,"Item<br>Date<br><br>","col_1");
   generateTh(row,"","dummy");
   for (i in items) {
@@ -111,12 +111,13 @@ function generateHtmlTable(table,items) {
 //-------------------------------------------------------------------------------------------------------
 function updateVirtualTableCell(line,when,event) {
     // some events at same date
-    console.log(line)
-    console.log(when)
+    //console.log(line)
+    //console.log(when)
+    //console.log(event)
     if (   Object.keys(virtualTable[line][when]).length > 0 ) {
-      console.log("----------------- Collision" + line)
-      console.log(when)
-      console.log(event)
+      //console.log("----------------- Collision" + line)
+      //console.log(when)
+      //console.log(event)
       
       let processing = "[" + virtualTable[line][when]["kind"] + "/" + virtualTable[line][when]["note"]  + "]";
       //console.log(processing)
@@ -146,23 +147,42 @@ function updateVirtualTableCell(line,when,event) {
 }
 
 //-------------------------------------------------------------------------------------------------------
+function isWhenInStartEnd(when) {
+//console.log("------------- isWhenIn ...")
+////console.log(CTX.getStart())
+////console.log(CTX.getEnd())
+//console.log(when)
+  if ( new Date(when.substring(0,10)) < CTX.getStart() ) {
+    //console.log("False")
+    return(false)
+  }
+  if ( new Date(when.substring(0,10)) > CTX.getEnd() ) {
+    //console.log("False")
+    return(false)
+  }
+//console.log("True")
+  return(true)
+}
+//-------------------------------------------------------------------------------------------------------
 // Suffix A or M
 function updateVirtualTableCellWithSuffix(line,when,event,suffix) {
-
-    let nEvent=JSON.parse(JSON.stringify(event));
-    let nWhen=when+suffix;
-    nEvent["date"]=nWhen;
-    nEvent["when"]=nWhen;
-    updateVirtualTableCell(line,nWhen,nEvent);
+  if ( ! isWhenInStartEnd(when) ) {
+    return
+  }
+  let nEvent=JSON.parse(JSON.stringify(event));
+  let nWhen=when+suffix;
+  nEvent["date"]=nWhen;
+  nEvent["when"]=nWhen;
+  //console.log("--------------")
+  //console.log(when)
+  //console.log(nWhen)
+  updateVirtualTableCell(line,nWhen,nEvent);
 
 }
 
 //-------------------------------------------------------------------------------------------------------
 function simpleWhenVirtualTable(line,when,event) {
-  if ( when < start ) {
-    return
-  }
-  if ( when > end ) {
+  if ( ! isWhenInStartEnd(when) ) {
     return
   }
   let nEvent=JSON.parse(JSON.stringify(event));
@@ -179,34 +199,29 @@ function simpleWhenVirtualTable(line,when,event) {
 
 //-------------------------------------------------------------------------------------------------------
 function multipleWhensVirtualTable(line,when,event) {
-  console.log("multipleWhensVirtualTable")
-  console.log(when);
+  //console.log("-------> multipleWhensVirtualTable")
+  //console.log(when);
   let whens=when.split("@");
   //let start=new Date(whens[0].substring(0,10));
   //let end=new Date(whens[whens.length -1 ].substring(0,10));
-  console.log(whens);
-console.log(whens[0]);
-
   let nstart=new Date(whens[0].substring(0,10));
-console.log(nstart)
-  if ( nstart < new Date(start) ) {
-    nstart = new Date(start)
+  if ( nstart < new Date(CTX.getStart()) ) {
+    nstart = new Date(CTX.getStart())
   }
-  //let nend=new Date(whens[whens.length -1 ].substring(0,10));
-console.log(whens[1]);
   let nend=new Date(whens[1].substring(0,10));
-console.log(nend)
-
-  if ( nend > new Date(end) ) {
-    nend = new Date(end)
+  if ( nend > new Date(CTX.getEnd()) ) {
+    nend = new Date(CTX.getEnd())
   }
-  if ( nend < new Date(start) ) {
+  if ( nend < new Date(CTX.getStart()) ) {
+    console.log("Rejected 1 end before start");
     return
   }
-  if ( nstart > new Date(end) ) {
+  if ( nstart > new Date(CTX.getEnd()) ) {
+    console.log("Rejected 2 start after end");
     return
   }
   if ( nstart > new Date(nend)) {
+   console.log("Rejected 3");
     return
   }
   let loop = new Date(nstart);
@@ -214,11 +229,8 @@ console.log(nend)
   let dates=[];
 
   while(loop <= nend){
-    console.log("Looooooop" )
-    console.log(loop)
-    console.log(nend)
     let day=date2day(loop);
-    console.log(day);
+    //console.log(day);
     dates.push(day+"M");
     dates.push(day+"A");
     let newDate = loop.setDate(loop.getDate() + 1);
@@ -240,13 +252,13 @@ console.log(nend)
   }
 
   for (d of dates) {
-    console.log(d);
+    //console.log(d);
     
     let nEvent=JSON.parse(JSON.stringify(event));;
     //nEvent["line"]=line;
     nEvent["date"]=d;
-    console.log(event);
-    console.log(nEvent);
+    //console.log(event);
+    //console.log(nEvent);
     updateVirtualTableCell(line,d,nEvent);
     }
 }
@@ -327,8 +339,9 @@ function JoursFeries (an){
 //-------------------------------------------------------------------------------------------------------
 function createVirtualTableLine(name) {
   virtualTable[name]={};
-  let loop = new Date(start);
-  while(loop <= end){
+  let today=new Date()
+  let loop = new Date(CTX.getStart());
+  while(loop <= CTX.getEnd()){
     //console.log(loop);
     //let day=loop.toISOString().split('T')[0];
     let day=date2day(loop);
@@ -343,6 +356,10 @@ function createVirtualTableLine(name) {
     if ((day in publicHolidays) && (dayOfWeek != 0 ) && (dayOfWeek != 6 )) {
       dayProps[day + "M"]="feast";
       dayProps[day + "A"]="feast";
+    }
+    if ( date2day(today) == date2day(loop) ) {
+      dayProps[day + "M"]="today";
+      dayProps[day + "A"]="today";
     }
     let newDate = loop.setDate(loop.getDate() + 1);
     loop = new Date(newDate);
@@ -385,10 +402,9 @@ function fillDatasTable(datas,items) {
 }
 
 //-------------------------------------------------------------------------------------------------------
-function initDaysList(start,end) {
-    console.log(start)
-  let loop = new Date(start);
-  while(loop <= end){
+function initDaysList() {
+   let loop = new Date(CTX.getStart());
+  while(loop <= CTX.getEnd()){
     //console.log(loop);
     //let day=loop.toISOString().split('T')[0];
     let day=date2day(loop);
@@ -417,26 +433,55 @@ for (let d of JoursFeries("2022")) {
 var dayProps={};
 var daysList=[]
 
-var start=new Date("2022-04-01");
-var end=new Date("2022-07-01");
+//var start=new Date("2022-04-01");
+//var end=new Date("2022-07-01");
+
+CTX={}
+
+function getToday(offset) {
+  console.log(offset)
+    let msday=86400*1000
+  let nd= new Date(new Date().getTime() + offset*msday).toJSON().slice(0, 10)
+  console.log(nd)
+  return(nd);
+}
+
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 function createPage() {
+  let start=document.getElementById("start").value
+  if (start.length == 0) {
+    document.getElementById("start").value=getToday(-2)
+  }
+  let end=document.getElementById("end").value
+  if (end.length == 0) {
+    document.getElementById("end").value=getToday(22)
+  }
+  CTX={
+    _start: document.getElementById("start").value,
+    _end: document.getElementById("end").value,
+    //_start: "2022-04-01",
+    //_end: "2022-04-30",  
+    getStart  : function () { console.log(this._start);return(new Date(this._start)) },
+    setStart  : function (val) { console.log(val);this._start=val },
+    getEnd  : function () { return(new Date(this._end)) }
+  }
 
-  //console.log(virtualTable);
+  console.log(CTX.getStart())
   eventsCounter={};
   virtualTable={};
   namesCounter={};
   //daysList=[]
   //start = new Date(document.getElementById("start").value);
   //console.log("===================================")
-  initDaysList(start,end)
+  initDaysList()
   //console.log("----------------------")
   initVirtualTable(myPlanning);
   //console.log(virtualTable);
   fillInVirtualTable(myPlanning);
-  console.table(virtualTable)
+  //console.table(virtualTable)
   var table = document.querySelector("#planning");
+table.innerHTML=""
   var tableHeaderRowCount = 1;
 //var table = document.getElementById('WRITE_YOUR_HTML_TABLE_NAME_HERE');
   var rowCount = table.rows.length;
@@ -490,13 +535,15 @@ document.addEventListener("keyup", function(event) {
         alert('Enter is pressed!');
     }
 });
+
+
 </script>
 <body>
     <h2>Commands</h2>
     <input type="text" id="myInput" onkeyup="filterItems()" placeholder="Search for items ..">
     <form>
-    <input type="text" id="start" placeholder="start">
-    <input type="text" id="xend" placeholder="end">
+    <input type="text" id="start" placeholder="start" value="">
+    <input type="text" id="end" placeholder="end" value="">
     <input type="button" onclick="createPage()">
      </form>
     <p>Hint : !xxx to negate, !\+ to compact</p>
