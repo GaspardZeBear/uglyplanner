@@ -37,8 +37,14 @@ xheight: 10px;
 }
 
 .feast {
-    color: blackk;
+    color: black;
     background-color: pink;
+    width: 10px;
+  }
+
+.today {
+    color: black;
+    background-color: orange;
     width: 10px;
   }
 
@@ -86,6 +92,10 @@ xheight: 10px;
 
 .HOL {
   background-color: yellow;
+}
+
+.MIS {
+  background-color: wheat;
 }
 
 .H a {
