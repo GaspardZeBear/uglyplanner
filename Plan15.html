@@ -297,7 +297,7 @@ function createVirtualTableLine(name) {
     let day=date2day(loop);
     CTX.getVirtualTable()[name][day + "M"]={};
     CTX.getVirtualTable()[name][day + "A"]={};
-    dayOfWeek=new Date(day.substring(0,10)).getDay();
+    let dayOfWeek=new Date(day.substring(0,10)).getDay();
     CTX.getDayProps()[day + "M"]="d" + dayOfWeek.toString();
     CTX.getDayProps()[day + "A"]="d" + dayOfWeek.toString();
     if ((day in CTX.getPublicHolidays() ) && (dayOfWeek != 0 ) && (dayOfWeek != 6 )) {
