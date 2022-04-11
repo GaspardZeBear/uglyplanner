@@ -1,0 +1,37 @@
+
+<!doctype html>
+<html lang="fr">
+<head>
+<title>HTML Planning</title>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="Planning.css">
+<link rel="stylesheet" href="tootik.min.css">
+<script type="text/javascript" src="Planning.js"></script>
+<script type="text/javascript" src="Planner.js"></script>
+
+
+<body>
+    <h2>Commands</h2>
+    <input type="text" id="myInput" onkeyup="filterItems()" placeholder="Search for items ..">
+    <form>
+    <input type="text" id="start" placeholder="start" value="">
+    <input type="text" id="end" placeholder="end" value="">
+    <input type="button" onclick="createPage()">
+     </form>
+    <p>Hint : !xxx to negate, !\+ to compact</p>
+
+        
+    <h2>Planning</h2>
+    <div>
+    <table id="planning">
+
+    </table>
+    </div>
+
+    <h2>Details</h2>
+    <table id="datas">
+
+    </table>
+</body>
+</html>
