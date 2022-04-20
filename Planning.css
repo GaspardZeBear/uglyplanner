@@ -25,7 +25,7 @@ xheight: 10px;
 }
 
 .ruler {
-    background-color: white;
+    background-color: lightyellow;
     color:white;
     border: 0px;
     xheight: 10px;
@@ -44,7 +44,8 @@ xheight: 10px;
 
 .today {
     color: black;
-    background-color: orange;
+    background-color: snow;
+    border: 2px solid orange;
     width: 10px;
   }
 
@@ -116,6 +117,12 @@ xheight: 10px;
 .EVT {
   background-color: lightseagreen;
 }
+
+
+.CHG {
+  background-color: pink;
+}
+
 
 .XXX {
     background-color: red;

@@ -78,6 +78,14 @@ function generateTd(row, event, col, clazz) {
         content.setAttribute("data-tootik",event["note"])
         content.setAttribute("data-tootik-conf","invert multiline square shadow")
         cell.classList.add(event["kind"]);
+	details=document.createElement('details')
+	p=document.createElement('p')
+	p.append("balbala")
+	summary=document.createElement('summary')
+	summary.append(text)
+	details.append(p)
+	details.append(summary)
+        //cell.appendChild(details);
       } 
       content.append(text);
       content.href="#"+getHrefFromEvent(event);
@@ -260,6 +268,14 @@ function fillInVirtualTable(myPlanning) {
     for (let event of item["events"]) {
        console.log(event);
        CTX.getEventsCounter()[i] += 1
+
+       //event["note"]="myNote"
+       if ( (typeof event["note"] === 'undefined')  || event["note"].length == 0) {
+         event["note"]=item["name"]
+       } else {
+         event["note"] = item["name"] + ";" + event["note"]
+       }
+
        j=event["when"];
        k=event;
        k["date"]="";
@@ -267,7 +283,7 @@ function fillInVirtualTable(myPlanning) {
        whensVirtualTable(i,j,k);
        if (  "links" in event ) {
          for ( link of event["links"] ) {
-           k["note"] += ": [link] " + i
+           //k["note"] += ": [from] " + i
            whensVirtualTable(link,j,k);
          }
        }
@@ -437,7 +453,7 @@ function createPage() {
   }
   let end=document.getElementById("end").value
   if (end.length == 0) {
-    document.getElementById("end").value=getToday(22)
+    document.getElementById("end").value=getToday(90)
   }
   CTX={
     _start: document.getElementById("start").value,
