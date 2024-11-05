@@ -18,10 +18,11 @@ xhttp.onreadystatechange = function() {
        // Typical action to be performed when the document is ready:
        //document.getElementById("demo").innerHTML = xhttp.responseText;
        myPlanning = JSON.parse(xhttp.responseText);
-       createPage();
+       createPage(myPlanning["Planning"],myPlanning["Colors"]);
     }
 };
-xhttp.open("GET", "Planning.txt", true);
+//http.open("GET", "Planning.txt", true);
+xhttp.open("GET", "/excelreader", true);
 xhttp.send();
 </script>
 

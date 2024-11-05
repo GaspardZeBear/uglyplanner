@@ -78,13 +78,13 @@ function generateTd(row, event, col, clazz) {
         content.setAttribute("data-tootik",event["note"])
         content.setAttribute("data-tootik-conf","invert multiline square shadow")
         cell.classList.add(event["kind"]);
-	details=document.createElement('details')
-	p=document.createElement('p')
-	p.append("balbala")
-	summary=document.createElement('summary')
-	summary.append(text)
-	details.append(p)
-	details.append(summary)
+      	details=document.createElement('details')
+	      p=document.createElement('p')
+	      p.append("balbala")
+	      summary=document.createElement('summary')
+	      summary.append(text)
+	      details.append(p)
+	      details.append(summary)
         //cell.appendChild(details);
       } 
       content.append(text);
@@ -387,13 +387,13 @@ function fillDatasTable(datas) {
 //-------------------------------------------------------------------------------------------------------
 function initDaysList() {
    let loop = new Date(CTX.getStart());
-  while(loop <= CTX.getEnd()){
+   while(loop <= CTX.getEnd()){
     let day=date2day(loop);
     CTX.getDaysList().push(day + "M")
     CTX.getDaysList().push(day + "A")
     let newDate = loop.setDate(loop.getDate() + 1);
     loop = new Date(newDate);
-  }
+   }
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -446,7 +446,7 @@ function filterItems() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
-function createPage() {
+function createPage(myPlanning,myColors) {
   let start=document.getElementById("start").value
   if (start.length == 0) {
     document.getElementById("start").value=getToday(-2)
@@ -492,4 +492,4 @@ function createPage() {
 //-- Main ----------------
 //--------------------------------------------------------------------------------------------------------------------------------------
 CTX={}
-myPlanning=null
+//myPlanning=null
