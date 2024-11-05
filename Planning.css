@@ -3,7 +3,7 @@
 table {
   table-layout: fixed;
 
-  xborder: 1px solid black;
+  border: 1px solid black;
 }
 
 th, td {
@@ -89,51 +89,6 @@ xheight: 10px;
   color: yellow;
   background-color:grey;
   width: 10px;
-}
-
-.HOL {
-  background-color: yellow;
-}
-
-.MIS {
-  background-color: wheat;
-}
-
-.H a {
-    background-color: white;
-    color: white !important;
-  }
-  
-.BYE {
-  background-color: grey;
-}
-.TEA {
-  background-color: blueviolet;
-}
-.PUP {
-  background-color: pink;
-}
-
-.EVT {
-  background-color: lightseagreen;
-}
-
-
-.CHG {
-  background-color: pink;
-}
-
-
-.XXX {
-    background-color: red;
-
-  }
-
-div {
-  width: 100%;
-  overflow-x: scroll;
-  overflow-y: visible;
-  padding: 0;
 }
 
 

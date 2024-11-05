@@ -6,10 +6,24 @@
 <meta charset="utf-8">
 
 <link rel="stylesheet" href="Planning.css">
+<link rel="stylesheet" href="Custom.css">
 <link rel="stylesheet" href="tootik.min.css">
 <script type="text/javascript" src="Planning.js"></script>
 <script type="text/javascript" src="Planner.js"></script>
 
+<script>
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+       // Typical action to be performed when the document is ready:
+       //document.getElementById("demo").innerHTML = xhttp.responseText;
+       myPlanning = JSON.parse(xhttp.responseText);
+       createPage();
+    }
+};
+xhttp.open("GET", "Planning.txt", true);
+xhttp.send();
+</script>
 
 <body>
     <h2>Commands</h2>
