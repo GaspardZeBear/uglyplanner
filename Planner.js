@@ -77,6 +77,11 @@ function generateTd(row, event, col, clazz) {
       if ( col > 2 ) {
         content.setAttribute("data-tootik",event["note"])
         content.setAttribute("data-tootik-conf","invert multiline square shadow")
+
+// color from excel
+        //content.setAttribute("style" , "background-color:red") 
+        content.setAttribute("style" , "background-color:" + CTX._colors[event["kind"]]) 
+
         cell.classList.add(event["kind"]);
       	details=document.createElement('details')
 	      p=document.createElement('p')
@@ -455,6 +460,7 @@ function createPage(myPlanning,myColors) {
   if (end.length == 0) {
     document.getElementById("end").value=getToday(90)
   }
+  //myColors1={"Presentiel":"blue","Fake":"yellow"}
   CTX={
     _start: document.getElementById("start").value,
     _end: document.getElementById("end").value,
@@ -463,7 +469,8 @@ function createPage(myPlanning,myColors) {
     _namesCounter:{},
     _eventsCounter:{},
     _publicHolidays:{},
-    _virtualTable :{},  
+    _virtualTable :{},
+    _colors:myColors,
     getNamesCounter  : function () { return(this._namesCounter) },
     getEventsCounter  : function () { return(this._eventsCounter) },
     getPublicHolidays  : function () { return(this._publicHolidays) },
